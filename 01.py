@@ -1,18 +1,18 @@
 from aoc import lines
 
 
-def fuel_needed(x):
-    return max(int(x) // 3 - 2, 0)
+def fuel(double_checker):
+    def inner(x):
+        value = max(x // 3 - 2, 0)
+        if double_checker and value:
+            value += inner(value)
+        return value
+
+    return lambda x: inner(int(x))
 
 
-requirements = lines(fuel_needed)
-part_1 = sum(requirements)
-
-part_2 = 0
-for fuel in requirements:
-    while fuel:
-        part_2 += fuel
-        fuel = fuel_needed(fuel)
+part_1 = sum(lines(fuel(False)))
+part_2 = sum(lines(fuel(True)))
 
 print('Part 1:', part_1)
 print('Part 2:', part_2)
