@@ -10,6 +10,7 @@ class Intcode:
         6: 3,
         7: 4,
         8: 4,
+        9: 2,
         99: 1,
     }
 
@@ -39,23 +40,34 @@ class Intcode:
         self.current = next(self.output_stream, None)
         return self.current
 
+    def get_memory(self, address):
+        if address >= len(self.memory):
+            return 0
+        return self.memory[address]
+
     def runner(self):
         pointer = 0
+        relative_base = 0
+
+        get_by_mode = [
+            lambda x: self.get_memory(x),
+            lambda x: x,
+            lambda x: self.get_memory(relative_base+x),
+        ]
+
         while True:
-            opcode, *modes = Intcode.get_modes(self.memory[pointer])
+            opcode, *modes = Intcode.get_modes(self.get_memory(pointer))
             if opcode == 99:
                 break
-            values = [
-                x for x in self.memory[pointer+1:pointer+1+len(modes)]]
-            modded = [x if modes[i] else self.memory[x]
-                      for i, x in enumerate(values)]
-
+            values = [x for x in self.memory[pointer+1:pointer+1+len(modes)]]
+            modded = [get_by_mode[m](v) for v, m in zip(values, modes)]
+            assign_value = None
             if opcode == 1:
-                self.memory[values[2]] = modded[0] + modded[1]
+                assign_value = modded[0] + modded[1]
             elif opcode == 2:
-                self.memory[values[2]] = modded[0] * modded[1]
+                assign_value = modded[0] * modded[1]
             elif opcode == 3:
-                self.memory[values[0]], *self.input = self.input
+                assign_value, *self.input = self.input
             elif opcode == 4:
                 yield modded[0]
             elif opcode == 5:
@@ -67,10 +79,22 @@ class Intcode:
                     pointer = modded[1]
                     continue
             elif opcode == 7:
-                self.memory[values[2]] = (modded[0] < modded[1]) * 1
+                assign_value = (modded[0] < modded[1]) * 1
             elif opcode == 8:
-                self.memory[values[2]] = (modded[0] == modded[1]) * 1
+                assign_value = (modded[0] == modded[1]) * 1
+            elif opcode == 9:
+                relative_base += modded[0]
             else:
                 raise Exception(f'opcode {opcode} not an accepted value')
+
+            if assign_value != None:
+                address = values[-1]
+                if modes[-1] == 2:
+                    address += relative_base
+                needed_length = address + 1 - len(self.memory)
+                if needed_length > 0:
+                    self.memory += [0] * needed_length
+                self.memory[address] = assign_value
+
             pointer += Intcode.param_count[opcode]
         self.halted = True
