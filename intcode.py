@@ -35,6 +35,10 @@ class Intcode:
     def add_input(self, value):
         self.input.append(value)
 
+    def take_output(self, length):
+        for _ in range(length):
+            yield self.read_output()
+
     def read_output(self):
         self.previous = self.current
         self.current = next(self.output_stream, None)
