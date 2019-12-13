@@ -1,8 +1,6 @@
 from aoc import splitted_lines
 import re
 from itertools import count
-from functools import reduce
-from math import ceil
 
 moon_order = ('Io', 'Europa', 'Ganymede', 'Callisto')
 moons = set(moon_order)
@@ -62,41 +60,16 @@ for step in count(1):
 
 
 def calculate_reset(values):
-    def divs(value, divisor):
-        for i in count():
-            if value % divisor:
-                return i
-            value //= divisor
-    primes = set()
-    total = 1
-    for v in count(2):
-        if all(v % p for p in primes):
-            primes.add(v)
-            MAX = max(divs(value, v) for value in values)
-            for i in range(len(values)):
-                while not values[i] % v:
-                    values[i] //= v
-            if MAX:
-                total *= MAX*v
-                print(f'multiply total by {v}, {MAX} times')
-                print('values:', *values)
-        if v > max(values):
+    first, second, third = values
+    for common in count(first, first):
+        if not common % second:
             break
-    return total
+    for common2 in count(common, common):
+        if not common2 % third:
+            return common2
 
 
 part_2 = calculate_reset(loops)
 
-if any(part_2 % loop for loop in loops):
-    print('TOTALLY WRONG!')
-    print('TOTALLY WRONG!')
-    print('TOTALLY WRONG!')
-
 print('part 1:', part_1)
 print('part 2:', part_2)
-if part_2 <= 22234944:
-    print('too low!')
-if part_2 >= 877960669018104:
-    print('too high!')
-if part_2 in [1294606453, 219490167254526]:
-    print('wrong number!')
