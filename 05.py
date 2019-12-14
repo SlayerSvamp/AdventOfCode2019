@@ -3,8 +3,8 @@ from intcode import Intcode
 
 intcode = split(int, ',')
 
-*_, part_1 = Intcode(intcode, [1]).output_stream
-*_, part_2 = Intcode(intcode, [5]).output_stream
+part_1 = Intcode(intcode).run(1).last()
+part_2 = Intcode(intcode).run(5).last()
 
 print('part 1:', part_1)
 print('part 2:', part_2)

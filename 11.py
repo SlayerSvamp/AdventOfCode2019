@@ -9,17 +9,16 @@ directions = [(0, -1), (1, 0), (0, 1), (-1, 0)]
 def run(start_pane):
     panes = {}
     x, y, direction = 0, 0, 0
-    robot = Intcode(intcode, [start_pane])
+    robot = Intcode(intcode).run(start_pane)
     direction = 0
-    while True:
-        color, turn = robot.take_output(2)
-        if robot.halted:
-            break
+    while robot.running:
+        color, turn = robot.take(2)
         panes[x, y] = color
         direction = (direction + turn*2 + 3) % 4
         dx, dy = directions[direction]
         x, y = x+dx, y+dy
-        robot.add_input(panes.get((x, y), 0))
+        robot.push(panes.get((x, y), 0))
+        robot.run()
     return panes
 
 

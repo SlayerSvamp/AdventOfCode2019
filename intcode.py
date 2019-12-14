@@ -25,24 +25,33 @@ class Intcode:
             if instruction:
                 instruction //= 10
 
-    def __init__(self, intcode, input_stream=[]):
+    def __init__(self, intcode):
         self.memory = [*intcode]
-        self.input = input_stream
-        self.halted = False
-        self.current = None
-        self.output_stream = self.runner()
+        self.running = True
+        self.input_requester = self.runner()
+        self.input = []
+        self.output = []
 
-    def add_input(self, value):
+    def run(self, *values):
+        self.input += values
+        next(self.input_requester, None)
+        return self
+
+    def push(self, value):
         self.input.append(value)
 
-    def take_output(self, length):
-        for _ in range(length):
-            yield self.read_output()
+    def pop(self):
+        output, *self.output = self.output
+        return output
 
-    def read_output(self):
-        self.previous = self.current
-        self.current = next(self.output_stream, None)
-        return self.current
+    def last(self):
+        return self.output[-1]
+
+    def take(self, length=1):
+        output = self.output[0:length]
+        self.output = self.output[length:]
+        self.current = output[-1]
+        return output
 
     def get_memory(self, address):
         if address >= len(self.memory):
@@ -71,9 +80,11 @@ class Intcode:
             elif opcode == 2:
                 assign_value = modded[0] * modded[1]
             elif opcode == 3:
+                if not self.input:
+                    yield True
                 assign_value, *self.input = self.input
             elif opcode == 4:
-                yield modded[0]
+                self.output.append(modded[0])
             elif opcode == 5:
                 if modded[0] != 0:
                     pointer = modded[1]
@@ -101,4 +112,5 @@ class Intcode:
                 self.memory[address] = assign_value
 
             pointer += Intcode.param_count[opcode]
-        self.halted = True
+
+        self.running = False

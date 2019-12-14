@@ -7,7 +7,7 @@ def with_input(intcode, noun, verb):
     code = Intcode(intcode)
     code.memory[1] = noun
     code.memory[2] = verb
-    [*code.output_stream]
+    code.run()
     return code.memory[0]
 
 
